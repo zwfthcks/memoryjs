@@ -1,5 +1,5 @@
 const fs = require('fs');
-const memoryjs = require('./build/Release/memoryjs');
+const memoryjs = require('./build/Release/memoryjs.node');
 const Debugger = require('./src/debugger');
 const constants = require('./src/consts');
 const { STRUCTRON_TYPE_STRING } = require('./src/utils');
