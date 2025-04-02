@@ -105,6 +105,59 @@ Napi::Value openProcess(const Napi::CallbackInfo& args) {
   }
 }
 
+
+Napi::Value isProcessRunning(const Napi::CallbackInfo& args) {
+  Napi::Env env = args.Env();
+
+  // Check arguments
+  if (args.Length() != 1 && args.Length() != 2) {
+    Napi::Error::New(env, "requires 1 argument, or 2 arguments if a callback is being used").ThrowAsJavaScriptException();
+    return env.Null();
+  }
+
+  if (!args[0].IsString() && !args[0].IsNumber() && !args[0].IsObject()) {
+    Napi::Error::New(env, "first argument must be a string, number, or handle object").ThrowAsJavaScriptException();
+    return env.Null();
+  }
+
+  if (args.Length() == 2 && !args[1].IsFunction()) {
+    Napi::Error::New(env, "second argument must be a function").ThrowAsJavaScriptException();
+    return env.Null();
+  }
+
+  // Define error message that may be set by the function
+  char* errorMessage = "";
+  bool isRunning = false;
+
+  if (args[0].IsString()) {
+    // Check by process name
+    std::string processName(args[0].As<Napi::String>().Utf8Value());
+    isRunning = Process.isProcessRunning(processName.c_str(), &errorMessage);
+  } 
+  else if (args[0].IsNumber()) {
+    // Check by process ID
+    DWORD processId = args[0].As<Napi::Number>().Uint32Value();
+    isRunning = Process.isProcessRunning(processId, &errorMessage);
+  } 
+  else {
+    // Check by process handle
+    HANDLE handle = (HANDLE)args[0].As<Napi::Object>().Get("handle").As<Napi::Number>().Int64Value();
+    isRunning = Process.isProcessRunning(handle, &errorMessage);
+  }
+
+  // If this is asynchronous (callback provided)
+  if (args.Length() == 2) {
+    // Callback to let the user handle with the information
+    Napi::Function callback = args[1].As<Napi::Function>();
+    callback.Call(env.Global(), { Napi::String::New(env, errorMessage), Napi::Boolean::New(env, isRunning) });
+    return env.Null();
+  } else {
+    // return boolean
+    return Napi::Boolean::New(env, isRunning);
+  }
+}
+
+
 Napi::Value closeHandle(const Napi::CallbackInfo& args) {
   Napi::Env env = args.Env();
   BOOL success = CloseHandle((HANDLE)args[0].As<Napi::Number>().Int64Value());
@@ -1576,6 +1629,7 @@ std::string GetLastErrorToString() {
 Napi::Object init(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "openProcess"), Napi::Function::New(env, openProcess));
   exports.Set(Napi::String::New(env, "getProcesses"), Napi::Function::New(env, getProcesses));
+  exports.Set(Napi::String::New(env, "isProcessRunning"), Napi::Function::New(env, isProcessRunning));
   exports.Set(Napi::String::New(env, "getModules"), Napi::Function::New(env, getModules));
   exports.Set(Napi::String::New(env, "findModule"), Napi::Function::New(env, findModule));
   exports.Set(Napi::String::New(env, "readMemory"), Napi::Function::New(env, readMemory));
