@@ -94,7 +94,7 @@ std::vector<PROCESSENTRY32> process::getProcesses(char** errorMessage) {
   return processes;
 }
 
-bool process::isProcessRunning(DWORD processId, char** errorMessage) {
+bool process::processExists(DWORD processId, char** errorMessage) {
   // Direct check if the process exists by trying to open it
   HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
   
@@ -113,7 +113,7 @@ bool process::isProcessRunning(DWORD processId, char** errorMessage) {
   return false;
 }
 
-bool process::isProcessRunning(const char* processName, char** errorMessage) {
+bool process::processExists(const char* processName, char** errorMessage) {
   // Get list of processes
   std::vector<PROCESSENTRY32> processes = getProcesses(errorMessage);
   
@@ -121,25 +121,8 @@ bool process::isProcessRunning(const char* processName, char** errorMessage) {
     // Check if the process name matches
     if (!strcmp(processes[i].szExeFile, processName)) {
       // Found the process, now verify it's running
-      return isProcessRunning(processes[i].th32ProcessID, errorMessage);
+      return processExists(processes[i].th32ProcessID, errorMessage);
     }
-  }
-  
-  return false;
-}
-
-bool process::isProcessRunning(HANDLE processHandle, char** errorMessage) {
-  if (processHandle == NULL || processHandle == INVALID_HANDLE_VALUE) {
-    *errorMessage = "invalid process handle";
-    return false;
-  }
-  
-  // Check if the process is running
-  DWORD exitCode;
-  BOOL result = GetExitCodeProcess(processHandle, &exitCode);
-  
-  if (result && exitCode == STILL_ACTIVE) {
-    return true;
   }
   
   return false;

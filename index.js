@@ -326,44 +326,13 @@ function mapViewOfFile(processHandle, fileHandle, offset, viewSize, pageProtecti
   return memoryjs.mapViewOfFile(processHandle, fileHandle, offset, viewSize, pageProtection);
 }
 
-function isProcessRunning(processIdentifier, callback) {
-  // Determine the type of identifier and call the appropriate function
-  if (typeof processIdentifier === 'number') {
-    // Check if the number might be a handle (large number) or a PID
-    if (processIdentifier > 0xFFFF) { // Arbitrary threshold to distinguish PIDs from handles
-      return isProcessRunningByHandle(processIdentifier, callback);
-    } else {
-      return isProcessRunningByPid(processIdentifier, callback);
-    }
-  } else if (typeof processIdentifier === 'string') {
-    return isProcessRunningByName(processIdentifier, callback);
-  } else {
-    throw new Error('processIdentifier must be a number (PID or handle) or string (process name)');
-  }
-}
-
-function isProcessRunningByPid(processId, callback) {
+function processExists(processIdentifier, callback) {
+  // Direct call to the native method, which handles both string and number identifiers
   if (arguments.length === 1) {
-    return memoryjs.isProcessRunningByPid(processId);
+    return memoryjs.processExists(processIdentifier);
   }
-
-  return memoryjs.isProcessRunningByPid(processId, callback);
-}
-
-function isProcessRunningByName(processName, callback) {
-  if (arguments.length === 1) {
-    return memoryjs.isProcessRunningByName(processName);
-  }
-
-  return memoryjs.isProcessRunningByName(processName, callback);
-}
-
-function isProcessRunningByHandle(processHandle, callback) {
-  if (arguments.length === 1) {
-    return memoryjs.isProcessRunningByHandle(processHandle);
-  }
-
-  return memoryjs.isProcessRunningByHandle(processHandle, callback);
+  
+  return memoryjs.processExists(processIdentifier, callback);
 }
 
 const library = {
@@ -386,10 +355,7 @@ const library = {
   unloadDll,
   openFileMapping,
   mapViewOfFile,
-  isProcessRunning,
-  isProcessRunningByPid,
-  isProcessRunningByName,
-  isProcessRunningByHandle,
+  processExists,
   attachDebugger: memoryjs.attachDebugger,
   detachDebugger: memoryjs.detachDebugger,
   awaitDebugEvent: memoryjs.awaitDebugEvent,

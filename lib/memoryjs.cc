@@ -106,7 +106,7 @@ Napi::Value openProcess(const Napi::CallbackInfo& args) {
 }
 
 
-Napi::Value isProcessRunning(const Napi::CallbackInfo& args) {
+Napi::Value processExists(const Napi::CallbackInfo& args) {
   Napi::Env env = args.Env();
 
   // Check arguments
@@ -115,8 +115,8 @@ Napi::Value isProcessRunning(const Napi::CallbackInfo& args) {
     return env.Null();
   }
 
-  if (!args[0].IsString() && !args[0].IsNumber() && !args[0].IsObject()) {
-    Napi::Error::New(env, "first argument must be a string, number, or handle object").ThrowAsJavaScriptException();
+  if (!args[0].IsString() && !args[0].IsNumber()) {
+    Napi::Error::New(env, "first argument must be a string or number").ThrowAsJavaScriptException();
     return env.Null();
   }
 
@@ -132,17 +132,12 @@ Napi::Value isProcessRunning(const Napi::CallbackInfo& args) {
   if (args[0].IsString()) {
     // Check by process name
     std::string processName(args[0].As<Napi::String>().Utf8Value());
-    isRunning = Process.isProcessRunning(processName.c_str(), &errorMessage);
+    isRunning = Process.processExists(processName.c_str(), &errorMessage);
   } 
   else if (args[0].IsNumber()) {
     // Check by process ID
     DWORD processId = args[0].As<Napi::Number>().Uint32Value();
-    isRunning = Process.isProcessRunning(processId, &errorMessage);
-  } 
-  else {
-    // Check by process handle
-    HANDLE handle = (HANDLE)args[0].As<Napi::Object>().Get("handle").As<Napi::Number>().Int64Value();
-    isRunning = Process.isProcessRunning(handle, &errorMessage);
+    isRunning = Process.processExists(processId, &errorMessage);
   }
 
   // If this is asynchronous (callback provided)
@@ -156,7 +151,6 @@ Napi::Value isProcessRunning(const Napi::CallbackInfo& args) {
     return Napi::Boolean::New(env, isRunning);
   }
 }
-
 
 Napi::Value closeHandle(const Napi::CallbackInfo& args) {
   Napi::Env env = args.Env();
@@ -1629,7 +1623,7 @@ std::string GetLastErrorToString() {
 Napi::Object init(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "openProcess"), Napi::Function::New(env, openProcess));
   exports.Set(Napi::String::New(env, "getProcesses"), Napi::Function::New(env, getProcesses));
-  exports.Set(Napi::String::New(env, "isProcessRunning"), Napi::Function::New(env, isProcessRunning));
+  exports.Set(Napi::String::New(env, "processExists"), Napi::Function::New(env, processExists));
   exports.Set(Napi::String::New(env, "getModules"), Napi::Function::New(env, getModules));
   exports.Set(Napi::String::New(env, "findModule"), Napi::Function::New(env, findModule));
   exports.Set(Napi::String::New(env, "readMemory"), Napi::Function::New(env, readMemory));
