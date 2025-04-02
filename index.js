@@ -326,6 +326,15 @@ function mapViewOfFile(processHandle, fileHandle, offset, viewSize, pageProtecti
   return memoryjs.mapViewOfFile(processHandle, fileHandle, offset, viewSize, pageProtection);
 }
 
+function processExists(processIdentifier, callback) {
+  // Direct call to the native method, which handles both string and number identifiers
+  if (arguments.length === 1) {
+    return memoryjs.processExists(processIdentifier);
+  }
+  
+  return memoryjs.processExists(processIdentifier, callback);
+}
+
 const library = {
   openProcess,
   closeProcess,
@@ -346,6 +355,7 @@ const library = {
   unloadDll,
   openFileMapping,
   mapViewOfFile,
+  processExists,
   attachDebugger: memoryjs.attachDebugger,
   detachDebugger: memoryjs.detachDebugger,
   awaitDebugEvent: memoryjs.awaitDebugEvent,

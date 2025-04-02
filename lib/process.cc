@@ -93,3 +93,37 @@ std::vector<PROCESSENTRY32> process::getProcesses(char** errorMessage) {
   CloseHandle(hProcessSnapshot);
   return processes;
 }
+
+bool process::processExists(DWORD processId, char** errorMessage) {
+  // Direct check if the process exists by trying to open it
+  HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
+  
+  if (hProcess != NULL) {
+    // Process exists
+    DWORD exitCode;
+    BOOL result = GetExitCodeProcess(hProcess, &exitCode);
+    CloseHandle(hProcess);
+    
+    // Check if the process is actually running (not in a zombie state)
+    if (result && exitCode == STILL_ACTIVE) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+bool process::processExists(const char* processName, char** errorMessage) {
+  // Get list of processes
+  std::vector<PROCESSENTRY32> processes = getProcesses(errorMessage);
+  
+  for (std::vector<PROCESSENTRY32>::size_type i = 0; i != processes.size(); i++) {
+    // Check if the process name matches
+    if (!strcmp(processes[i].szExeFile, processName)) {
+      // Found the process, now verify it's running
+      return processExists(processes[i].th32ProcessID, errorMessage);
+    }
+  }
+  
+  return false;
+}

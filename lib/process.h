@@ -21,6 +21,10 @@ public:
   Pair openProcess(DWORD processId, char** errorMessage);
   void closeProcess(HANDLE hProcess);
   std::vector<PROCESSENTRY32> getProcesses(char** errorMessage);
+
+  // Renamed methods to check if a process is running
+  bool processExists(DWORD processId, char** errorMessage);
+  bool processExists(const char* processName, char** errorMessage);
 };
 
 #endif
