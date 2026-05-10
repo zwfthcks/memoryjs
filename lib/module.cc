@@ -1,3 +1,11 @@
+#ifdef _MSC_VER
+#ifndef __builtin_frame_address
+#include <intrin.h>
+#pragma intrinsic(_AddressOfReturnAddress)
+#define __builtin_frame_address(x) ((void*)_AddressOfReturnAddress())
+#endif
+#endif
+
 #include <node.h>
 #include <windows.h>
 #include <TlHelp32.h>
